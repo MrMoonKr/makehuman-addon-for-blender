@@ -10,9 +10,9 @@ LOWEST_FUNCTIONAL_BLENDER_VERSION = (4, 2, 0)
 class SystemService:
     """Utility functions for various system tasks."""
 
-    def __init__(self):
+    def __init__( self ):
         """You should not instance SystemService. Use its static methods instead."""
-        raise RuntimeError("You should not instance SystemService. Use its static methods instead.")
+        raise RuntimeError( "You should not instance SystemService. Use its static methods instead." )
 
     @staticmethod
     def deduce_platform():
@@ -57,7 +57,7 @@ class SystemService:
     def check_for_rigify():
         """Check if the Blender Rigify addon is enabled. This method will both check for the addon per se,
         and for the specific operators which are commonly used."""
-        (loaded_default, loaded_state) = addon_utils.check('rigify')  # pylint: disable=W0612
+        ( loaded_default, loaded_state ) = addon_utils.check( 'rigify' )  # pylint: disable=W0612
         if not loaded_state:
             _LOG.warn("Rigify is not enabled")
             return False
@@ -84,7 +84,7 @@ class SystemService:
         return re.sub(r"\\+", "/", str(path_string))
 
     @staticmethod
-    def string_contains_path_segment(full_path, path_segment, case_insensitive=True):
+    def string_contains_path_segment( full_path, path_segment, case_insensitive=True ):
         """Check if the full path contains the path segment."""
         if not full_path or not path_segment:
             return False
@@ -101,7 +101,7 @@ class SystemService:
 
     # Method for finding if the currently running blender version is at least the specified version
     @staticmethod
-    def is_blender_version_at_least(version=LOWEST_FUNCTIONAL_BLENDER_VERSION):
+    def is_blender_version_at_least( version=LOWEST_FUNCTIONAL_BLENDER_VERSION ):
         """Check if the currently running blender version is at least the specified version.
 
         Args:

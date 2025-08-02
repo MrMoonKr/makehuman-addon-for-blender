@@ -9,19 +9,19 @@ import bpy, json
 _LOG = LogService.get_logger("rigify.operators.converttorigify")
 
 
-class MPFB_OT_Convert_To_Rigify_Operator(bpy.types.Operator):
+class MPFB_OT_Convert_To_Rigify_Operator( bpy.types.Operator ):
     """Convert rig to rigify"""
-    bl_idname = "mpfb.convert_to_rigify"
-    bl_label = "Rigify"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_idname   = "mpfb.convert_to_rigify"
+    bl_label    = "Rigify"
+    bl_options  = {'REGISTER', 'UNDO'}
 
     @classmethod
-    def poll(self, context):
-        if not ObjectService.object_is_skeleton(context.active_object):
+    def poll( self, context ):
+        if not ObjectService.object_is_skeleton( context.active_object ):
             return False
         return True
 
-    def execute(self, context):
+    def execute( self, context ):
         _LOG.enter()
         _LOG.debug("click")
 
@@ -51,4 +51,4 @@ class MPFB_OT_Convert_To_Rigify_Operator(bpy.types.Operator):
         return {'FINISHED'}
 
 
-ClassManager.add_class(MPFB_OT_Convert_To_Rigify_Operator)
+ClassManager.add_class( MPFB_OT_Convert_To_Rigify_Operator )

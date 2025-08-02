@@ -20,9 +20,9 @@ class RigService:
     """The RigService class is a utility class designed to provide various static methods for working with armatures, rigs, bones,
     bone contraints, poses and weights. The class is not meant to be instantiated, as all methods are static and can be called directly."""
 
-    def __init__(self):
+    def __init__( self ):
         """Do not instance, there are only static methods in the class"""
-        raise RuntimeError("You should not instance RigService. Use its static methods instead.")
+        raise RuntimeError( "You should not instance RigService. Use its static methods instead." )
 
     @staticmethod
     def ensure_global_poses_are_available():

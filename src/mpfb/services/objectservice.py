@@ -35,43 +35,43 @@ class ObjectService:
     Note that most logic related to vertex groups and meshes are located in the MeshService class, rather then in ObjectService.
     """
 
-    def __init__(self):
-        raise RuntimeError("You should not instance ObjectService. Use its static methods instead.")
+    def __init__( self ):
+        raise RuntimeError( "You should not instance ObjectService. Use its static methods instead." )
 
     @staticmethod
     def random_name():
         """Generate a random string containing 15 lowercase ascii characters."""
         letters = string.ascii_lowercase
-        return ''.join(random.choice(letters) for i in range(15))
+        return ''.join( random.choice( letters ) for i in range( 15 ) )
 
     @staticmethod
-    def delete_object_by_name(name):
+    def delete_object_by_name( name ):
         """Safely delete an object with a given name. Will gracefully skip doing anything if the object does not exist."""
         if not name:
             return
         if name not in bpy.data.objects:
             return
-        ObjectService.delete_object(bpy.data.objects[name])
+        ObjectService.delete_object( bpy.data.objects[name] )
 
     @staticmethod
-    def delete_object(object_to_delete):
+    def delete_object( object_to_delete ):
         """Safely delete an object with a given name. Will gracefully skip doing anything if the object is None."""
         if not object_to_delete:
             return
-        bpy.data.objects.remove(object_to_delete, do_unlink=True)
+        bpy.data.objects.remove( object_to_delete, do_unlink=True )
 
     @staticmethod
-    def object_name_exists(name):
+    def object_name_exists( name ):
         """Check if there's an existing object with the given name."""
         if not name:
             return False
         return name in bpy.data.objects
 
     @staticmethod
-    def ensure_unique_name(desired_name):
+    def ensure_unique_name( desired_name ):
         """Make sure that the name is unique. If no object with the given name exists, return the name unchanged.
         Otherwise add an incrementing number to the name until there's no name clash."""
-        if not ObjectService.object_name_exists(desired_name):
+        if not ObjectService.object_name_exists( desired_name ):
             return desired_name
         for i in range(1, 100):
             ranged_name = desired_name + "." + str(i).zfill(3)
@@ -80,7 +80,7 @@ class ObjectService:
         return desired_name + ".999"
 
     @staticmethod
-    def activate_blender_object(object_to_make_active, *, context=None, deselect_all=False):
+    def activate_blender_object( object_to_make_active, *, context=None, deselect_all=False ):
         """Make given object selected and active. Optionally also deselect all other objects."""
         if deselect_all:
             ObjectService.deselect_and_deactivate_all()
@@ -95,18 +95,18 @@ class ObjectService:
         """Make sure no object is selected nor active."""
         if bpy.context.object:
             try:
-                bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
-                bpy.context.object.select_set(False)
+                bpy.ops.object.mode_set( mode='OBJECT', toggle=False )
+                bpy.context.object.select_set( False )
             except:
-                _LOG.debug("Tried mode_set / unselect on non-existing object")
+                _LOG.debug( "Tried mode_set / unselect on non-existing object" )
         for obj in bpy.context.selected_objects:
             bpy.context.view_layer.objects.active = obj
-            bpy.context.active_object.select_set(False)
-            obj.select_set(False)
+            bpy.context.active_object.select_set( False )
+            obj.select_set( False )
         bpy.context.view_layer.objects.active = None
 
     @staticmethod
-    def has_vertex_group(blender_object, vertex_group_name):
+    def has_vertex_group( blender_object: bpy.types.Object, vertex_group_name ):
         """
         Check if a given Blender object has a specified vertex group.
 
@@ -190,12 +190,12 @@ class ObjectService:
             object_to_link.parent = parent
 
     @staticmethod
-    def get_list_of_children(parent_object):
+    def get_list_of_children( parent_object: bpy.types.Object ) -> typing.List[bpy.types.Object]:
         """Return list with objects whose parent property is set to parent_object."""
-        children = []
+        children: typing.List[bpy.types.Object] = []
         for potential_child in bpy.data.objects:
             if potential_child.parent == parent_object:
-                children.append(potential_child)
+                children.append( potential_child )
         return children
 
     @staticmethod
@@ -247,22 +247,22 @@ class ObjectService:
         objects = []
         for obj in bpy.context.selected_objects:
             if obj.type == "MESH":
-                objects.append(obj)
+                objects.append( obj )
         return objects
 
     @staticmethod
-    def get_object_type(blender_object) -> str:
+    def get_object_type( blender_object: bpy.types.Object ) -> str:
         """Return the value of the object_type custom property. This is a string which can be, for example,
         "Basemesh" for a human object."""
         if not blender_object:
             return ""
 
-        object_type = GeneralObjectProperties.get_value("object_type", entity_reference=blender_object)
+        object_type = GeneralObjectProperties.get_value( "object_type", entity_reference=blender_object )
 
-        return str(object_type or "").strip()
+        return str( object_type or "" ).strip()
 
     @staticmethod
-    def object_is(blender_object, mpfb_type_name: str | typing.Sequence[str]):
+    def object_is( blender_object: bpy.types.Object, mpfb_type_name: str | typing.Sequence[str] ) -> bool:
         """
         Check if the given object is of the correct type(s).
 
@@ -274,14 +274,14 @@ class ObjectService:
         if not mpfb_type_name:
             return False
 
-        mpfb_type = ObjectService.get_object_type(blender_object)
+        mpfb_type = ObjectService.get_object_type( blender_object )
 
         if not mpfb_type:
             return False
 
         mpfb_type = mpfb_type.lower()
 
-        if isinstance(mpfb_type_name, str):
+        if isinstance( mpfb_type_name, str ):
             mpfb_type_name = [mpfb_type_name]
 
         for item in mpfb_type_name:
@@ -301,7 +301,7 @@ class ObjectService:
         return ObjectService.object_is(blender_object, "Basemesh")
 
     @staticmethod
-    def object_is_skeleton(blender_object):
+    def object_is_skeleton( blender_object: bpy.types.Object ) -> bool:
         """
         Check if the given object is of type 'Skeleton'.
 
@@ -311,10 +311,10 @@ class ObjectService:
         Returns:
             bool: True if the object is of type 'Skeleton', False otherwise.
         """
-        return ObjectService.object_is(blender_object, "Skeleton")
+        return ObjectService.object_is( blender_object, "Skeleton" )
 
     @staticmethod
-    def object_is_subrig(blender_object):
+    def object_is_subrig( blender_object: bpy.types.Object ) -> bool:
         """
         Check if the given object is of type 'Subrig'.
 
@@ -324,10 +324,10 @@ class ObjectService:
         Returns:
             bool: True if the object is of type 'Subrig', False otherwise.
         """
-        return ObjectService.object_is(blender_object, "Subrig")
+        return ObjectService.object_is( blender_object, "Subrig" )
 
     @staticmethod
-    def object_is_any_skeleton(blender_object):
+    def object_is_any_skeleton( blender_object: bpy.types.Object ) -> bool:
         """
         Check if the given object is of any skeleton type.
 
@@ -337,12 +337,12 @@ class ObjectService:
         Returns:
             bool: True if the object is of any skeleton type, False otherwise.
         """
-        return ObjectService.object_is(blender_object, _SKELETON_TYPES)
+        return ObjectService.object_is( blender_object, _SKELETON_TYPES )
 
     @staticmethod
-    def object_is_body_proxy(blender_object):
+    def object_is_body_proxy( blender_object: bpy.types.Object ) -> bool:
         """Object has object_type Proxymesh or Proxymeshes."""
-        return ObjectService.object_is(blender_object, "Proxymesh") or ObjectService.object_is(blender_object, "Proxymeshes")
+        return ObjectService.object_is( blender_object, "Proxymesh" ) or ObjectService.object_is( blender_object, "Proxymeshes" )
 
     @staticmethod
     def object_is_eyes(blender_object):
@@ -355,14 +355,14 @@ class ObjectService:
         return ObjectService.object_is_basemesh(blender_object) or ObjectService.object_is_body_proxy(blender_object)
 
     @staticmethod
-    def object_is_any_mesh(blender_object):
+    def object_is_any_mesh( blender_object: bpy.types.Object | None ) -> bool:
         """Object is not none and has type MESH."""
         return blender_object and blender_object.type == "MESH"
 
     @staticmethod
-    def object_is_any_makehuman_mesh(blender_object):
+    def object_is_any_makehuman_mesh( blender_object : bpy.types.Object | None ) -> bool:
         """Object is not none, has type MESH and has a valid object_type set."""
-        return blender_object and blender_object.type == "MESH" and ObjectService.get_object_type(blender_object)
+        return blender_object and blender_object.type == "MESH" and ObjectService.get_object_type( blender_object )
 
     @staticmethod
     def object_is_any_mesh_asset(blender_object):
@@ -393,7 +393,8 @@ class ObjectService:
     @staticmethod
     def find_all_objects_of_type_amongst_nearest_relatives(
             blender_object: bpy.types.Object,
-            mpfb_type_name: str | typing.Sequence[str]="Basemesh", *,
+            mpfb_type_name: str | typing.Sequence[str]="Basemesh", 
+            *,
             only_parents=False, strict_parent=False, only_children=False,
             ) -> typing.Generator[bpy.types.Object, None, None]:
         """
@@ -423,10 +424,10 @@ class ObjectService:
                 elif parents_child.type == "ARMATURE":
                     yield from rec_children(parents_child)
 
-        if ObjectService.object_is(blender_object, mpfb_type_name):
+        if ObjectService.object_is( blender_object, mpfb_type_name ):
             yield blender_object
 
-        yield from rec_children(blender_object)
+        yield from rec_children( blender_object )
 
         if only_children:
             return
@@ -436,17 +437,17 @@ class ObjectService:
 
         while parent:
             if strict_parent:
-                if parent.type != 'ARMATURE' and not ObjectService.object_is_any_makehuman_object(parent):
+                if parent.type != 'ARMATURE' and not ObjectService.object_is_any_makehuman_object( parent ):
                     break
 
-            if ObjectService.object_is(parent, mpfb_type_name):
+            if ObjectService.object_is( parent, mpfb_type_name ):
                 yield parent
 
-            yield from rec_children(parent, parent_from)
+            yield from rec_children( parent, parent_from )
 
-            parent_from = parent
-            parent = parent.parent
-            strict_parent = True
+            parent_from     = parent
+            parent          = parent.parent
+            strict_parent   = True
 
     @staticmethod
     def find_related_objects(blender_object, **kwargs):
@@ -546,7 +547,7 @@ class ObjectService:
                         yield child
 
     @staticmethod
-    def object_is_generated_rigify_rig(blender_object):
+    def object_is_generated_rigify_rig( blender_object : bpy.types.Object | None ) -> bool:
         """
         Check if the given Blender object is a generated Rigify rig.
 
@@ -556,7 +557,7 @@ class ObjectService:
         Returns:
             bool: True if the object is a generated Rigify rig, False otherwise.
         """
-        return blender_object and blender_object.type == "ARMATURE" and blender_object.data.get("rig_id")
+        return blender_object and blender_object.type == "ARMATURE" and blender_object.data.get( "rig_id" )
 
     @staticmethod
     def object_is_rigify_metarig(blender_object, *, check_bones=False):
@@ -636,7 +637,7 @@ class ObjectService:
                 operator.report({'ERROR'}, "Could not find the armature object.")
             return None, None, None
 
-        assert isinstance(armature_object, bpy.types.Object) and armature_object.type == 'ARMATURE'
+        assert isinstance( armature_object, bpy.types.Object ) and armature_object.type == 'ARMATURE'
 
         if is_subrig is False:
             # When explicitly defining the rig status as non-subrig, use it as the skeleton

@@ -25,39 +25,39 @@ class MpfbPreferences(bpy.types.AddonPreferences):
     # )
     #===========================================================================
 
-    mpfb_user_data: bpy.props.StringProperty(
+    mpfb_user_data: bpy.props.StringProperty( # type: ignore
         name="Path to MPFB user data",
         description="If you want to store MPFB user data somewhere other than in the default location, you can enter the path to an existing directory here",
         default=""
     )
 
-    mpfb_second_root: bpy.props.StringProperty(
+    mpfb_second_root: bpy.props.StringProperty( # type: ignore
         name="Secondary asset root",
         description="If you want to discover assets from an additional directory, enter the path here. This should be equivalent of a \"data\" directory, ie it should contain subdirs \"clothes\", \"hair\" and so on. Note that only mesh and material assets will be found here",
         default="",
         update=update_second_root
     )
 
-    mh_user_data: bpy.props.StringProperty(
+    mh_user_data: bpy.props.StringProperty( # type: ignore
         name="Path to MakeHuman user data",
         description="If you want to use assets and models created from or downloaded with MakeHuman, you can specify the path to the data directory here. It is usually ~/Documents/makehuman/v1py3/data or something looking like that",
         default="",
         update=update_mh_data
     )
 
-    mh_auto_user_data: bpy.props.BoolProperty(
+    mh_auto_user_data: bpy.props.BoolProperty( # type: ignore
         name="Autodiscover path to MakeHuman user data",
         description="If the path to the MakeHuman user data directory is not specified, then try to figure it out automatically. If the path is explicitly set, this setting will have no effect",
         default=False
     )
 
-    mpfb_codechecks: bpy.props.BoolProperty(
+    mpfb_codechecks: bpy.props.BoolProperty( # type: ignore
         name="Dynamically perform code checks on startup",
         description="This is mainly geared towards developers. Enable this to output warnings to the log for when an operator or a panel does not use code robustness wrappers",
         default=False
     )
 
-    mpfb_shelf_label: bpy.props.StringProperty(
+    mpfb_shelf_label: bpy.props.StringProperty( # type: ignore
         name="Shelf label",
         description="If you want to use a different name for the MPFB shelf tab, you can enter any non-empty string here",
         default=""

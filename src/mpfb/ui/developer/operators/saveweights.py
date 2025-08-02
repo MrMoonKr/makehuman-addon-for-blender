@@ -10,30 +10,30 @@ from bpy_extras.io_utils import ExportHelper
 
 _LOG = LogService.get_logger("developer.operators.saveweights")
 
-class MPFB_OT_Save_Weights_Operator(bpy.types.Operator, ExportHelper):
+class MPFB_OT_Save_Weights_Operator( bpy.types.Operator, ExportHelper ):
     """Save weights as json"""
-    bl_idname = "mpfb.save_weights"
-    bl_label = "Save weights"
-    bl_options = {'REGISTER'}
+    bl_idname           = "mpfb.save_weights"
+    bl_label            = "Save weights"
+    bl_options          = {'REGISTER'}
 
-    filename_ext = '.mhw'
-    check_extension = False
+    filename_ext        = '.mhw'
+    check_extension     = False
 
     @classmethod
-    def poll(cls, context):
+    def poll( cls, context ):
         _LOG.enter()
-        if ObjectService.object_is_any_mesh(context.object):
+        if ObjectService.object_is_any_mesh( context.object ):
             return True
         if context.object is None or context.object.type != 'ARMATURE':
             return False
         return True
 
-    def execute(self, context):
+    def execute( self, context ):
         _LOG.enter()
 
         subrig_object = None
 
-        if ObjectService.object_is_any_mesh(context.object):
+        if ObjectService.object_is_any_mesh( context.object ):
             basemesh = context.object
             armature_object = None
 

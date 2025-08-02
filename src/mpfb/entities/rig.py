@@ -32,7 +32,7 @@ class Rig:
 
     armature_object: bpy.types.Object
 
-    def __init__(self, basemesh, armature=None, *, parent: typing.Optional['Rig']=None):
+    def __init__( self, basemesh, armature=None, *, parent: typing.Optional['Rig']=None ):
         """You might want to use one of the static methods rather than calling init directly."""
         self.basemesh = basemesh
         self.armature_object = armature
@@ -53,8 +53,8 @@ class Rig:
         """Create an instance of Rig and populate it with information from the json file and from the base mesh."""
         rig = Rig(basemesh, parent=parent)
 
-        with open(filename, "r") as json_file:
-            json_data = json.load(json_file)
+        with open( filename, "r" ) as json_file:
+            json_data = json.load( json_file )
 
             if "bones" in json_data:
                 if "version" not in json_data:
@@ -71,7 +71,7 @@ class Rig:
 
             else:
                 rig.rig_header["version"] = 100
-                rig.rig_definition.update(json_data)
+                rig.rig_definition.update( json_data )
 
         if rig._upgrade_definition():
             _LOG.debug("Upgraded the rig definition version")
@@ -201,14 +201,14 @@ class Rig:
 
         return rig
 
-    def create_armature_and_fit_to_basemesh(self, for_developer=False, add_modifier=True):
+    def create_armature_and_fit_to_basemesh( self, for_developer=False, add_modifier=True ):
         """Use the information in the object to construct an armature and adjust it to fit the base mesh."""
 
         if self.parent:
             # Disable pose evaluation for parent so that any child-of constraints bind to rest pose.
             self.parent.armature_object.data.pose_position = "REST"
 
-        bpy.ops.object.armature_add(location=self.basemesh.location)
+        bpy.ops.object.armature_add( location=self.basemesh.location )
         self.armature_object = bpy.context.object
 
         scale_factor = GeneralObjectProperties.get_value("scale_factor", entity_reference=self.basemesh)
@@ -286,64 +286,64 @@ class Rig:
             location = head_or_tail_info["default_position"]
         return location
 
-    def _align_roll_by_strategy(self, bone, bone_info):
-        self.apply_bone_roll_strategy(bone, bone_info.get("roll_strategy", None))
+    def _align_roll_by_strategy( self, bone, bone_info ):
+        self.apply_bone_roll_strategy( bone, bone_info.get( "roll_strategy", None ) )
 
     @staticmethod
-    def apply_bone_roll_strategy(bone, roll_strategy):
+    def apply_bone_roll_strategy( bone, roll_strategy ):
         matrix = None
 
         if roll_strategy == "ALIGN_Z_WORLD_Z":
-            matrix = matrix_from_axis_pair(bone.y_axis, (0, 0, 1), 'z')
+            matrix = matrix_from_axis_pair( bone.y_axis, (0, 0, 1), 'z' )
         elif roll_strategy == "ALIGN_X_WORLD_X":
-            matrix = matrix_from_axis_pair(bone.y_axis, (1, 0, 0), 'x')
+            matrix = matrix_from_axis_pair( bone.y_axis, (1, 0, 0), 'x' )
 
         if matrix:
-            bone.roll = bpy.types.Bone.AxisRollFromMatrix(matrix, axis=bone.y_axis)[1]
+            bone.roll = bpy.types.Bone.AxisRollFromMatrix( matrix, axis=bone.y_axis )[1]
 
-    def create_bone_collections(self):
+    def create_bone_collections( self ):
         collections = self.armature_object.data.collections
 
         if bcoll_names := self.rig_header.get("collections"):
-            for bcoll in list(collections):
-                collections.remove(bcoll)
+            for bcoll in list( collections ):
+                collections.remove( bcoll )
 
             for name in bcoll_names:
-                collections.new(name)
+                collections.new( name )
 
         collections.active_index = 0
 
-    def create_bones(self):
+    def create_bones( self ):
         """Create the actual bones in the armature object."""
-        bpy.ops.object.mode_set(mode='EDIT', toggle=False)
+        bpy.ops.object.mode_set( mode='EDIT', toggle=False )
         bones = self.armature_object.data.edit_bones
         for bone_name in self.rig_definition.keys():
-            bone_info = self.rig_definition[bone_name]
-            bone = bones.new(bone_name)
-            bone.roll = bone_info["roll"]
-            bone.head = self.get_best_location_from_strategy(bone_info["head"])
-            bone.tail = self.get_best_location_from_strategy(bone_info["tail"])
+            bone_info   = self.rig_definition[bone_name]
+            bone        = bones.new( bone_name )
+            bone.roll   = bone_info["roll"]
+            bone.head   = self.get_best_location_from_strategy( bone_info["head"] )
+            bone.tail   = self.get_best_location_from_strategy( bone_info["tail"] )
 
-            self._align_roll_by_strategy(bone, bone_info)
+            self._align_roll_by_strategy( bone, bone_info )
 
-        bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
+        bpy.ops.object.mode_set( mode='OBJECT', toggle=False )
 
-    def reposition_edit_bone(self, *, developer=False):
+    def reposition_edit_bone( self, *, developer=False ):
         """Reposition bones to fit the current state of the basemesh."""
-        bpy.ops.object.mode_set(mode='EDIT', toggle=False)
+        bpy.ops.object.mode_set( mode='EDIT', toggle=False )
         for bone_name in self.rig_definition.keys():
-            bone_info = self.rig_definition[bone_name]
-            bone = RigService.find_edit_bone_by_name(bone_name, self.armature_object)
+            bone_info   = self.rig_definition[bone_name]
+            bone        = RigService.find_edit_bone_by_name( bone_name, self.armature_object )
             if bone:
-                bone.head = self.get_best_location_from_strategy(bone_info["head"])
-                bone.tail = self.get_best_location_from_strategy(bone_info["tail"])
-                self._align_roll_by_strategy(bone, bone_info)
+                bone.head = self.get_best_location_from_strategy( bone_info["head"] )
+                bone.tail = self.get_best_location_from_strategy( bone_info["tail"] )
+                self._align_roll_by_strategy( bone, bone_info )
             else:
                 _LOG.warn("Tried to refit bone that did not exist in definition", bone_name)
                 _LOG.debug("Bone info is", bone_info)
                 _LOG.dump("Rig definition is", self.rig_definition)
 
-        bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
+        bpy.ops.object.mode_set( mode='OBJECT', toggle=False )
 
         # Reset constraints if present
         updated = False
@@ -360,31 +360,31 @@ class Rig:
                     # When refitting in Developer -> Save Rig, update bones and weights in
                     # Armature constraints referencing a vertex
                     if self.parent and developer:
-                        if self._rebuild_armature_con_vertex_targets(con):
+                        if self._rebuild_armature_con_vertex_targets( con ):
                             updated = True
 
         if updated:
             bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
 
     @staticmethod
-    def get_armature_constraint_vertex_index(con: bpy.types.ArmatureConstraint) -> int | None:
-        if match := re.fullmatch(r'^VERTEX:\s*(\d+)(\D.*|)$', con.name):
-            return int(match.group(1))
+    def get_armature_constraint_vertex_index( con: bpy.types.ArmatureConstraint ) -> int | None:
+        if match := re.fullmatch( r'^VERTEX:\s*(\d+)(\D.*|)$', con.name ):
+            return int( match.group( 1 ) )
         else:
             return None
 
     @staticmethod
-    def ensure_armature_constraint_vertex_index(con: bpy.types.ArmatureConstraint, vertex: int):
-        if match := re.fullmatch(r'^VERTEX:\s*(\d+)(\D.*|)$', con.name):
+    def ensure_armature_constraint_vertex_index( con: bpy.types.ArmatureConstraint, vertex: int ):
+        if match := re.fullmatch( r'^VERTEX:\s*(\d+)(\D.*|)$', con.name ):
             con.name = f"VERTEX:{vertex}{match.group(2)}"
         else:
             con.name = f"VERTEX:{vertex} {con.name}"
 
-    def _rebuild_armature_con_vertex_targets(self, con: bpy.types.ArmatureConstraint):
-        vertex = self.get_armature_constraint_vertex_index(con)
+    def _rebuild_armature_con_vertex_targets( self, con: bpy.types.ArmatureConstraint ):
+        vertex = self.get_armature_constraint_vertex_index( con )
 
         if vertex is not None:
-            weights = self.parent._find_vertex_weights(vertex)
+            weights = self.parent._find_vertex_weights( vertex )
 
             if weights:
                 for tgt in list(con.targets):

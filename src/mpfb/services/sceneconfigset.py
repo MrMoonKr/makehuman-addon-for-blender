@@ -30,7 +30,7 @@ class SceneConfigSet(BlenderConfigSet):
         return BlenderConfigSet.check_and_transform_entity_reference(self, entity_reference)
 
     @staticmethod
-    def from_definitions_in_json_directory(properties_dir, prefix=""):
+    def from_definitions_in_json_directory(properties_dir:str, prefix=""):
         """
         Creates a SceneConfigSet instance from property definitions in a specified directory.
 

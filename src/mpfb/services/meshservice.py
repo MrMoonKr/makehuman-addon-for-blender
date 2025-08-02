@@ -23,11 +23,11 @@ class MeshService:
 
     Note that some mesh operations are also available in ObjectService, for example loading wavefront files."""
 
-    def __init__(self):
-        raise RuntimeError("You should not instance MeshService. Use its static methods instead.")
+    def __init__( self ):
+        raise RuntimeError( "You should not instance MeshService. Use its static methods instead." )
 
     @staticmethod
-    def create_mesh_object(vertices, edges, faces, vertex_groups=None, name="sample_object", link=True):
+    def create_mesh_object( vertices, edges, faces, vertex_groups=None, name="sample_object", link=True ):
         """
         Create a new mesh object from given vertices, edges, and faces, and optionally assign vertex groups.
 
@@ -42,18 +42,18 @@ class MeshService:
         Returns:
         - The created mesh object.
         """
-        target_mesh = bpy.data.meshes.new(name + "_mesh")
-        target_mesh.from_pydata(vertices, edges, faces)
-        target_object = bpy.data.objects.new(name, target_mesh)
+        target_mesh = bpy.data.meshes.new( name + "_mesh" )
+        target_mesh.from_pydata( vertices, edges, faces )
+        target_object = bpy.data.objects.new( name, target_mesh )
         if vertex_groups:
             for key in vertex_groups.keys():
-                MeshService.create_vertex_group(target_object, str(key), vertex_groups[key], nuke_existing_group=True)
+                MeshService.create_vertex_group( target_object, str(key), vertex_groups[key], nuke_existing_group=True )
         if link:
-            ObjectService.link_blender_object(target_object)
+            ObjectService.link_blender_object( target_object )
         return target_object
 
     @staticmethod
-    def create_sample_object(name="sample_object", link=True):
+    def create_sample_object( name="sample_object", link=True ):
         """Create a sample plane mesh with four faces."""
         #  0   1   2
         #  3   4   5
@@ -99,7 +99,7 @@ class MeshService:
         for i in range(9):
             vgroups["all"].append([i, 1.0])
 
-        return MeshService.create_mesh_object(vertices, edges, faces, vertex_groups=vgroups, name=name, link=link)
+        return MeshService.create_mesh_object( vertices, edges, faces, vertex_groups=vgroups, name=name, link=link )
 
     @staticmethod
     def find_vertices_in_vertex_group(mesh_object, vertex_group_name):

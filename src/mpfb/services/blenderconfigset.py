@@ -47,7 +47,7 @@ class BlenderConfigSet(ConfigurationSet):
         return self._prefix + key_name
 
     @staticmethod
-    def get_definitions_in_json_directory(properties_dir):
+    def get_definitions_in_json_directory(properties_dir: str):
         """
         Reads property definitions from JSON files in the specified directory.
 
