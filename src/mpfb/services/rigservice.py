@@ -1,7 +1,7 @@
 """Utility functions for working with rigs, bones and weights."""
 
 import bpy, os, fnmatch, shutil, json, re, typing
-from bpy.types import PoseBone
+from bpy.types import Object, Armature, Bone, EditBone, PoseBone
 from collections import defaultdict
 from mathutils import Matrix, Vector
 from .locationservice import LocationService
@@ -201,10 +201,10 @@ class RigService:
         _LOG.leave()
 
     @staticmethod
-    def get_world_space_location_of_pose_bone(bone_name, armature_object):
+    def get_world_space_location_of_pose_bone( bone_name: str, armature_object: Object ) -> dict[str,Vector] :
         """Find the head and tail of a pose bone and return their locations in world space."""
         _LOG.enter()
-        bone = RigService.find_pose_bone_by_name(bone_name, armature_object)
+        bone = RigService.find_pose_bone_by_name( bone_name, armature_object )
 
         loc = dict()
         loc["head"] = armature_object.matrix_world @ bone.tail
@@ -213,25 +213,25 @@ class RigService:
         return loc
 
     @staticmethod
-    def find_pose_bone_by_name(name, armature_object):
+    def find_pose_bone_by_name( name: str, armature_object: Object ):
         """Find a bone with the given name of the armature object, in pose mode."""
         _LOG.enter()
-        return armature_object.pose.bones.get(name)
+        return armature_object.pose.bones.get( name )
 
     @staticmethod
-    def find_edit_bone_by_name(name, armature_object):
+    def find_edit_bone_by_name( name: str, armature_object: Object ):
         """Find a bone with the given name of the armature object, in edit mode."""
         _LOG.enter()
-        return armature_object.data.edit_bones.get(name)
+        return armature_object.data.edit_bones.get( name )
 
     @staticmethod
-    def activate_pose_bone_by_name(name, armature_object, also_select_bone=True, also_deselect_all_other_bones=True):
+    def activate_pose_bone_by_name( name: str, armature_object: Object, also_select_bone=True, also_deselect_all_other_bones=True ):
         """Activate a bone with the given name of the armature object, in pose mode."""
         _LOG.enter()
         if also_deselect_all_other_bones:
             for bone in armature_object.pose.bones:
                 bone.bone.select = False
-        bone = RigService.find_pose_bone_by_name(name, armature_object)
+        bone = RigService.find_pose_bone_by_name( name, armature_object )
         armature_object.data.bones.active = bone.bone
         if also_select_bone:
             bone.bone.select = True
@@ -372,7 +372,7 @@ class RigService:
         return constraint
 
     @staticmethod
-    def find_pose_bone_tail_world_location(bone_name, armature_object):
+    def find_pose_bone_tail_world_location( bone_name: str, armature_object: Object ):
         """
         Finds the world space location of the tail of a pose bone.
 
@@ -383,11 +383,11 @@ class RigService:
         Returns:
             Vector: The world space location of the bone's tail.
         """
-        bone = RigService.find_pose_bone_by_name(bone_name, armature_object)
+        bone = RigService.find_pose_bone_by_name( bone_name, armature_object )
         return bone.tail + armature_object.location
 
     @staticmethod
-    def find_pose_bone_head_world_location(bone_name, armature_object):
+    def find_pose_bone_head_world_location( bone_name: str, armature_object: Object ):
         """
         Finds the world space location of the head of a pose bone.
 
@@ -399,7 +399,7 @@ class RigService:
             Vector: The world space location of the bone's head.
         """
         _LOG.enter()
-        bone = RigService.find_pose_bone_by_name(bone_name, armature_object)
+        bone = RigService.find_pose_bone_by_name( bone_name, armature_object )
         return bone.head + armature_object.location
 
     @staticmethod
@@ -431,7 +431,7 @@ class RigService:
             bone.ik_max_z = max_angle * _RADIAN
 
     @staticmethod
-    def get_bone_orientation_info_as_dict(armature_object):
+    def get_bone_orientation_info_as_dict( armature_object: Object ):
         """
         Retrieves the orientation information of bones in an armature object.
 
@@ -444,7 +444,7 @@ class RigService:
         Returns:
             dict: A dictionary containing the orientation information of pose bones and edit bones.
         """
-        bpy.ops.object.mode_set(mode='POSE', toggle=False)
+        bpy.ops.object.mode_set( mode='POSE', toggle=False )
         pose_bones = dict()
         for bone in armature_object.pose.bones:
             binfo = dict()
@@ -453,7 +453,7 @@ class RigService:
             binfo["matrix"] = bone.matrix.copy()
             pose_bones[bone.bone.name] = binfo
 
-        bpy.ops.object.mode_set(mode='EDIT', toggle=False)
+        bpy.ops.object.mode_set( mode='EDIT', toggle=False )
         edit_bones = dict()
         for bone in armature_object.data.edit_bones:
             binfo = dict()
@@ -467,13 +467,13 @@ class RigService:
                 binfo["parent"] = bone.parent.name
             edit_bones[bone.name] = binfo
 
-        bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
+        bpy.ops.object.mode_set( mode='OBJECT', toggle=False )
 
         out = dict()
         out["pose_bones"] = pose_bones
         out["edit_bones"] = edit_bones
 
-        _LOG.dump("bone info", out)
+        _LOG.dump( "bone info", out )
 
         return out
 
@@ -531,7 +531,7 @@ class RigService:
             RigService._recurse_set_orientation(armature_object, new_bone_orientation, bone_children, bone_name)
 
     @staticmethod
-    def _add_bone(armature, bone_info, parent_bone=None, scale=0.1):
+    def _add_bone( armature:Armature, bone_info, parent_bone:EditBone=None, scale=0.1):
         _LOG.enter()
         bone = armature.edit_bones.new(bone_info["name"])
 
@@ -560,10 +560,10 @@ class RigService:
                 bone.roll = bone_info["roll"]
 
         for child in bone_info["children"]:
-            RigService._add_bone(armature, child, bone, scale=scale)
+            RigService._add_bone( armature, child, bone, scale=scale )
 
     @staticmethod
-    def create_rig_from_skeleton_info(name, data, parent=None, scale=0.1):
+    def create_rig_from_skeleton_info( name, data, parent=None, scale=0.1 ):
         """
         Create a rig (armature) from the provided skeleton information.
 
@@ -580,21 +580,21 @@ class RigService:
             bpy.types.Object: The created armature object.
         """
         _LOG.enter()
-        armature = bpy.data.armatures.new(name + "Armature")
-        armature_object = bpy.data.objects.new(name, armature)
+        armature = bpy.data.armatures.new( name + "Armature" )
+        armature_object = bpy.data.objects.new( name, armature )
 
         armature_object.data.display_type = 'WIRE'
         armature_object.show_in_front = True
 
-        ObjectService.link_blender_object(armature_object, parent)
+        ObjectService.link_blender_object( armature_object, parent )
 
         bpy.context.view_layer.objects.active = armature_object
-        bpy.ops.object.mode_set(mode='EDIT', toggle=False)
+        bpy.ops.object.mode_set( mode='EDIT', toggle=False )
 
         for bone_info in data["bones"]:
-            RigService._add_bone(armature, bone_info, scale=scale)
+            RigService._add_bone( armature, bone_info, scale=scale )
 
-        RigService.normalize_rotation_mode(armature_object)
+        RigService.normalize_rotation_mode( armature_object )
 
         return armature_object
 
