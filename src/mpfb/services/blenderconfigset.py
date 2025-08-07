@@ -79,7 +79,7 @@ class BlenderConfigSet(ConfigurationSet):
                     raise IOError("Failed to read properties from " + str(json_file))
         return known_properties
 
-    def check_and_transform_entity_reference(self, entity_reference):
+    def check_and_transform_entity_reference( self, entity_reference ):
         """
         Validates and transforms the entity reference to ensure it matches the expected Blender type.
 
@@ -94,11 +94,11 @@ class BlenderConfigSet(ConfigurationSet):
         """
         if entity_reference is None:
             raise ValueError('Must provide a valid entity reference in order to read a BlenderConfigSet value')
-        if not isinstance(entity_reference, self._bpytype):
+        if not isinstance( entity_reference, self._bpytype ):
             raise ValueError('This entity reference is not an instance of ' + str(self._bpytype.__name__))
         return entity_reference
 
-    def get_value(self, name, default_value=None, entity_reference=None):
+    def get_value( self, name, default_value=None, entity_reference=None ):
         """
         Retrieves the value of a property from a Blender entity.
 
@@ -111,7 +111,7 @@ class BlenderConfigSet(ConfigurationSet):
             The value of the property, or the default value if the property is not found.
         """
         _LOG.enter()
-        entity_reference = self.check_and_transform_entity_reference(entity_reference)
+        entity_reference = self.check_and_transform_entity_reference( entity_reference )
         prop = None
         if name in self._properties_by_short_name:
             prop = self._properties_by_short_name[name]
@@ -129,8 +129,8 @@ class BlenderConfigSet(ConfigurationSet):
         _LOG.debug("property name", full_name)
 
         try:
-            if not hasattr(entity_reference, full_name):
-                _LOG.warn("Tried to read non existing key from entity:", (full_name, entity_reference))
+            if not hasattr( entity_reference, full_name ):
+                _LOG.warn( "Tried to read non existing key from entity : ", ( full_name, entity_reference ) )
                 return default_value
         except Exception as e:
             _LOG.error("Tried to read invalid/unreadable property", (full_name, entity_reference, e))
@@ -139,7 +139,7 @@ class BlenderConfigSet(ConfigurationSet):
         _LOG.trace("found value", getattr(entity_reference, full_name))
 
         # TODO: check if defined first. If not, check if any alias is defined
-        return getattr(entity_reference, full_name)
+        return getattr( entity_reference, full_name )
 
     def set_value(self, name, value, entity_reference=None):
         """
