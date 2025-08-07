@@ -62,36 +62,38 @@ _LOG = None
 # importing here is to just make sure everything is up and running
 # pylint: disable=W0611
 
+from typing import Any
 import bpy, os
+from bpy.types import Addon
 from bpy.utils import register_class
 
 # For printing output before _LOG has been initialized
 DEBUG = False
 
 
-def get_preference(name):
+def get_preference( name: str ) -> Any:
     """
-    Retrieve a preference value from the MPFB preference panel.
+        Retrieve a preference value from the MPFB preference panel.
 
-    This function looks up a preference value by its name from the MPFB add-on's preferences.
-    If the preference is found, its value is returned. If the preference is not found, an error
-    message is printed, and None is returned. If the add-on or its preferences are not properly
-    initialized, a ValueError is raised.
+        This function looks up a preference value by its name from the MPFB add-on's preferences.
+        If the preference is found, its value is returned. If the preference is not found, an error
+        message is printed, and None is returned. If the add-on or its preferences are not properly
+        initialized, a ValueError is raised.
 
-    Args:
-        name (str): The name of the preference to retrieve.
+        Args:
+            name (str): The name of the preference to retrieve.
 
-    Returns:
-        The value of the preference if found, otherwise None.
+        Returns:
+            The value of the preference if found, otherwise None.
 
-    Raises:
-        ValueError: If the add-on or its preferences are not properly initialized.
-    """
+        Raises:
+            ValueError: If the add-on or its preferences are not properly initialized.
+        """
     global DEBUG  # pylint: disable=W0602
     if DEBUG:
         print("get_preference(\"" + name + "\")")
     if __package__ in bpy.context.preferences.addons:
-        mpfb = bpy.context.preferences.addons[__package__]
+        mpfb: Addon = bpy.context.preferences.addons[__package__]
         if hasattr(mpfb, "preferences"):
             prefs = mpfb.preferences
             if hasattr(prefs, name):
@@ -138,9 +140,9 @@ def register():
     # Sample usage of this can be seen in test/tests/__init__.py
     global MPFB_CONTEXTUAL_INFORMATION
     MPFB_CONTEXTUAL_INFORMATION = dict()
-    MPFB_CONTEXTUAL_INFORMATION["__package__"] = str(__package__)
-    MPFB_CONTEXTUAL_INFORMATION["__package_short__"] = str(__package__).split(".")[-1]
-    MPFB_CONTEXTUAL_INFORMATION["__file__"] = str(__file__)
+    MPFB_CONTEXTUAL_INFORMATION["__package__"]          = str(__package__)
+    MPFB_CONTEXTUAL_INFORMATION["__package_short__"]    = str(__package__).split(".")[-1]
+    MPFB_CONTEXTUAL_INFORMATION["__file__"]             = str(__file__)
 
     # Preferences will be needed before starting the rest of the addon
     from ._preferences import MpfbPreferences

@@ -2,6 +2,7 @@
 
 import bpy
 import bpy.types
+from bpy.types import ShaderNodeTree, Node, ShaderNode, NodeTreeInterfaceSocket
 
 from .logservice import LogService
 
@@ -9,21 +10,23 @@ _LOG = LogService.get_logger("services.nodetreeservice")
 
 
 class NodeTreeService:
+    """
+        Service with utility functions for working with blender 4 shader node trees.  
+        It only has static methods, so you don't need to instance it."""
 
-    """Service with utility functions for working with blender 4 shader node trees. It only has static methods, so you don't
-    need to instance it."""
-
-    def __init__(self):
+    def __init__( self ):
         """Do not instance, there are only static methods in the class"""
         raise RuntimeError("You should not instance NodeTreeService. Use its static methods instead.")
 
     @staticmethod
-    def get_socket(node_tree, socket_name, in_out="INPUT"):
-        """Return an interface socket with the given name and in/out type, or None if it doesn't exist."""
+    def get_socket( node_tree: ShaderNodeTree, socket_name: str, in_out="INPUT" ) -> NodeTreeInterfaceSocket:
+        """
+            Return an interface socket with the given name and in/out type, or None if it doesn't exist.  
+            """
         _LOG.enter()
         for item in node_tree.interface.items_tree:
             _LOG.debug("Item, socket_name", (item, socket_name))
-            if isinstance(item, bpy.types.NodeTreeInterfaceSocket):
+            if isinstance( item, bpy.types.NodeTreeInterfaceSocket ):
                 if item.in_out == in_out:
                     if item.name == socket_name:
                         _LOG.debug("Returning item", item)
@@ -37,16 +40,16 @@ class NodeTreeService:
         return None
 
     @staticmethod
-    def get_output_socket(node_tree, socket_name):
+    def get_output_socket( node_tree, socket_name ):
         """Return an interface output socket with the given name, or None if it doesn't exist."""
         _LOG.enter()
-        return NodeTreeService.get_socket(node_tree, socket_name, in_out="OUTPUT")
+        return NodeTreeService.get_socket( node_tree, socket_name, in_out="OUTPUT" )
 
     @staticmethod
-    def get_input_socket(node_tree, socket_name):
+    def get_input_socket( node_tree, socket_name ):
         """Return an interface input socket with the given name, or None if it doesn't exist."""
         _LOG.enter()
-        return NodeTreeService.get_socket(node_tree, socket_name, in_out="INPUT")
+        return NodeTreeService.get_socket( node_tree, socket_name, in_out="INPUT" )
 
     @staticmethod
     def has_socket(node_tree, socket_name, in_out="INPUT"):
@@ -68,19 +71,25 @@ class NodeTreeService:
         return NodeTreeService.has_socket(node_tree, socket_name, in_out="OUTPUT")
 
     @staticmethod
-    def create_socket(node_tree, socket_name, socket_type, in_out="INPUT"):
-        """Create a new socket with the given name and type, and return it."""
+    def create_socket( node_tree: ShaderNodeTree, socket_name: str, socket_type: str, in_out="INPUT" ) -> NodeTreeInterfaceSocket:
+        """
+            Create a new socket with the given name and type, and return it.  
+            """
         _LOG.enter()
-        return node_tree.interface.new_socket(socket_name, socket_type=socket_type, in_out=in_out)
+        return node_tree.interface.new_socket( socket_name, socket_type=socket_type, in_out=in_out )
 
     @staticmethod
-    def create_input_socket(node_tree, socket_name, socket_type):
-        """Create a new input socket with the given name and type, and return it."""
+    def create_input_socket( node_tree: ShaderNodeTree, socket_name: str, socket_type: str ) -> NodeTreeInterfaceSocket:
+        """
+            Create a new input socket with the given name and type, and return it.  
+            """
         _LOG.enter()
-        return NodeTreeService.create_socket(node_tree, socket_name, socket_type, in_out="INPUT")
+        return NodeTreeService.create_socket( node_tree, socket_name, socket_type, in_out="INPUT" )
 
     @staticmethod
-    def create_output_socket(node_tree, socket_name, socket_type):
-        """Create a new output socket with the given name and type, and return it."""
+    def create_output_socket( node_tree: ShaderNodeTree, socket_name: str, socket_type: str ) -> NodeTreeInterfaceSocket:
+        """
+            Create a new output socket with the given name and type, and return it.  
+            """
         _LOG.enter()
-        return NodeTreeService.create_socket(node_tree, socket_name, socket_type, in_out="OUTPUT")
+        return NodeTreeService.create_socket( node_tree, socket_name, socket_type, in_out="OUTPUT" )

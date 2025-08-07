@@ -39,12 +39,14 @@ _START = int(time.time() * 1000.0)
 
 class Logger():
 
-    """The Logger class is used to create log channels that can log messages at different severity levels.
-    Each log channel writes messages to its own file and also to a combined log file. The log levels allow
-    filtering of messages so that only those of a certain severity or higher are logged. This is useful for
-    debugging and monitoring the behavior of the application."""
+    """
+        The Logger class is used to create log channels that can log messages at different severity levels.
+        Each log channel writes messages to its own file and also to a combined log file. The log levels allow
+        filtering of messages so that only those of a certain severity or higher are logged. This is useful for
+        debugging and monitoring the behavior of the application.
+        """
 
-    def __init__(self, name, level=5):
+    def __init__( self, name, level=5 ):
         """Construct a new log channel."""
         self.name = name
         self.level = level

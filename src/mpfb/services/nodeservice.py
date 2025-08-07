@@ -2,7 +2,7 @@
 
 import bpy
 import bpy.types
-from bpy.types import NodeSocketColor, ShaderNodeGroup, NodeGroupInput, NodeGroupOutput
+from bpy.types import NodeTree, Node, ShaderNodeTree, ShaderNode, ShaderNodeTexImage, NodeSocketColor, ShaderNodeGroup, NodeGroupInput, NodeGroupOutput
 import os
 
 from .logservice import LogService
@@ -82,59 +82,65 @@ _BLACKLISTED_ATTRIBUTE_TYPES = [
     ]
 
 _KNOWN_SHADER_NODE_CLASSES = []
-
-for subc in dir(bpy.types):
+'''
+    블렌더에서 제공하는 셰이더노드클래스( ShaderNode ) 목록 저장.  
+    '''
+    
+for subc in dir( bpy.types ):
     try:
-        obj = getattr(bpy.types, subc)
-        if hasattr(obj, "__bases__") and bpy.types.ShaderNode in obj.__bases__:
-            _KNOWN_SHADER_NODE_CLASSES.append(obj)
+        obj = getattr( bpy.types, subc )
+        if hasattr( obj, "__bases__" ) and bpy.types.ShaderNode in obj.__bases__:
+            _KNOWN_SHADER_NODE_CLASSES.append( obj )
     except Exception as e:
-        _LOG.error("An unexpected error occurred while listing shader classes", (subc, e))
+        _LOG.error( "An unexpected error occurred while listing shader classes", ( subc, e ) )
 
 
 class NodeService:
+    """
+        Managing and manipulating node trees and nodes within
+        Blender's shader node system.   
+        
+        It includes functionalities for:
 
-    """The NodeService class provides a collection of static methods for managing and manipulating node trees and nodes within
-    Blender's shader node system. It includes functionalities for:
+        - Creating and destroying nodes and node trees
+        - Retrieving information about nodes and sockets
+        - Managing node groups
+        - Creating, finding and setting the value for sockets
+        - Finding and linking nodes within a node tree
 
-    - Creating and destroying nodes and node trees
-    - Retrieving information about nodes and sockets
-    - Managing node groups
-    - Creating, finding and setting the value for sockets
-    - Finding and linking nodes within a node tree
+        In summary, the NodeService class is designed to facilitate the manipulation and querying of Blender's node-based shader
+        system programmatically.
+        """
 
-    In summary, the NodeService class is designed to facilitate the manipulation and querying of Blender's node-based shader
-    system programmatically."""
-
-    def __init__(self):
+    def __init__( self ):
         """Do not instance, there are only static methods in the class"""
-        raise RuntimeError("You should not instance NodeService. Use its static methods instead.")
+        raise RuntimeError( "You should not instance NodeService. Use its static methods instead." )
 
     @staticmethod
-    def create_node_tree(node_tree_name, inputs=None, outputs=None):
+    def create_node_tree( node_tree_name: str, inputs=None, outputs=None ) -> NodeTree:
         """
-        Create a new shader node tree with the given name.
+            Create a new shader node tree with the given name.
 
-        Parameters:
-        - node_tree_name: The name of the new node tree.
-        - inputs: Optional list of input sockets to add to the node tree.
-        - outputs: Optional list of output sockets to add to the node tree.
+            Parameters:
+            - node_tree_name: The name of the new node tree.
+            - inputs: Optional list of input sockets to add to the node tree.
+            - outputs: Optional list of output sockets to add to the node tree.
 
-        Returns:
-        - The created shader node tree.
-        """
-        node_tree = bpy.data.node_groups.new(node_tree_name, 'ShaderNodeTree')
+            Returns:
+            - The created shader node tree.
+            """
+        node_tree = bpy.data.node_groups.new( node_tree_name, 'ShaderNodeTree' )
         return node_tree
 
     @staticmethod
-    def destroy_node_tree(node_tree):
+    def destroy_node_tree( node_tree: NodeTree ):
         """
-        Remove the specified shader node tree from Blender's data.
+            Remove the specified shader node tree from Blender's data.
 
-        Parameters:
-        - node_tree: The shader node tree to be removed.
-        """
-        bpy.data.node_groups.remove(node_tree)
+            Parameters:
+            - node_tree: The shader node tree to be removed.
+            """
+        bpy.data.node_groups.remove( node_tree )
 
     @staticmethod
     def ensure_v2_node_groups_exist(fail_on_validation=False):
@@ -234,15 +240,15 @@ class NodeService:
     @staticmethod
     def get_known_shader_node_classes():
         """
-        Retrieve a list of known shader node classes.
+            Retrieve a list of known shader node classes.
 
-        Returns:
-        - A list of known shader node class names.
-        """
-        return list(_KNOWN_SHADER_NODE_CLASSES)
+            Returns:
+            - A list of known shader node class names.
+            """
+        return list( _KNOWN_SHADER_NODE_CLASSES )
 
     @staticmethod
-    def get_node_info(node):
+    def get_node_info( node: Node ):
         """Return a model v1 dict with information about a node instance, such as its input and output sockets,
         its class and its attributes."""
 
@@ -306,7 +312,7 @@ class NodeService:
             _LOG.debug("Node did not have the inputs attribute")
 
     @staticmethod
-    def _add_tex_image_info(node, node_info):
+    def _add_tex_image_info( node, node_info ):
         node_info["colorspace"] = "sRGB"
         if node.image and node.image.colorspace_settings:
             node_info["colorspace"] = node.image.colorspace_settings.name
@@ -430,21 +436,24 @@ class NodeService:
         return for_output
 
     @staticmethod
-    def clear_node_tree(node_tree, also_destroy_groups=False):
-        """Delete all nodes in a node tree. The tree instance as such will be preserved."""
+    def clear_node_tree( node_tree: ShaderNodeTree, also_destroy_groups=False ):
+        """
+            Delete all nodes in a node tree.  
+            The tree instance as such will be preserved.  
+            """
         nodes = []
         for node in node_tree.nodes:
-            _LOG.debug("Node", (node, isinstance(node, ShaderNodeGroup)))
-            nodes.append(node)
-            if also_destroy_groups and isinstance(node, ShaderNodeGroup):
-                _LOG.debug("found group to destroy", (node, node.name, node.node_tree, node.node_tree.name))
+            _LOG.debug("Node", ( node, isinstance(node, ShaderNodeGroup) ) )
+            nodes.append( node )
+            if also_destroy_groups and isinstance( node, ShaderNodeGroup ):
+                _LOG.debug("found group to destroy", ( node, node.name, node.node_tree, node.node_tree.name ) )
                 node.name = node.name + ".unused"
                 node.node_tree.name = node.node_tree.name + ".unused"
         for node in nodes:
-            node_tree.nodes.remove(node)
+            node_tree.nodes.remove( node )
 
     @staticmethod
-    def set_image_in_image_node(node, file_name, colorspace=None):
+    def set_image_in_image_node( node: ShaderNodeTexImage, file_name, colorspace=None ):
         """Update an existing image node with the provided filename and colorspace."""
         if not file_name or not str(file_name).strip():
             _LOG.error("Trying to load image with null/empty filename")
@@ -727,8 +736,10 @@ class NodeService:
         return bpy.data.node_groups.new(group_name, type="ShaderNodeTree")
 
     @staticmethod
-    def find_node_by_name(node_tree, node_name):
-        """Find a node with the given name in the node tree."""
+    def find_node_by_name( node_tree: ShaderNodeTree, node_name: str ) -> Node:
+        """
+            Find a node with the given name in the node tree.  
+            """
         _LOG.enter()
         for node in node_tree.nodes:
             if node.name == node_name:
@@ -736,16 +747,18 @@ class NodeService:
         return None
 
     @staticmethod
-    def find_nodes_by_type_name(node_tree, type_name):
-        """Return an array with all nodes of the given type in the node tree."""
+    def find_nodes_by_type_name( node_tree: ShaderNodeTree, type_name: str ) -> list[Node]:
+        """
+            Return an array with all nodes of the given type in the node tree.  
+            """
         _LOG.enter()
-        nodes = []
+        nodes: list[Node] = []
         for node in node_tree.nodes:
             _LOG.debug("node", node)
             _LOG.debug("node.type", node.type)
             _LOG.debug("node class", node.__class__.__name__)
             if type_name in [node.__class__.__name__, node.type]:
-                nodes.append(node)
+                nodes.append( node )
         return nodes
 
     @staticmethod
@@ -794,21 +807,25 @@ class NodeService:
         return None
 
     @staticmethod
-    def find_first_node_by_type_name(node_tree, type_name):
-        """Find the first node with the given type in the node tree."""
+    def find_first_node_by_type_name( node_tree: ShaderNodeTree, type_name: str ):
+        """
+            Find the first node with the given type in the node tree.  
+            """
         _LOG.enter()
-        nodes = NodeService.find_nodes_by_type_name(node_tree, type_name)
-        if nodes is None or len(nodes) < 1:
+        nodes = NodeService.find_nodes_by_type_name( node_tree, type_name )
+        if nodes is None or len( nodes ) < 1:
             _LOG.debug("Got an empty list of nodes for type", type_name)
             return None
         return nodes[0]
 
     @staticmethod
-    def find_first_group_node_by_tree_name(node_tree, tree_name):
-        """Find the first ShaderNodeGroup with the indicated node tree."""
+    def find_first_group_node_by_tree_name( node_tree: ShaderNodeTree, tree_name: str ) -> Node|ShaderNodeGroup:
+        """
+            Find the first ShaderNodeGroup with the indicated node tree.
+            """
         _LOG.enter()
-        nodes = NodeService.find_nodes_by_type_name(node_tree, "ShaderNodeGroup")
-        if nodes is None or len(nodes) < 1:
+        nodes = NodeService.find_nodes_by_type_name( node_tree, "ShaderNodeGroup" )
+        if nodes is None or len( nodes ) < 1:
             _LOG.debug("Got an empty list of group nodes")
             return None
         for node in nodes:
@@ -817,21 +834,21 @@ class NodeService:
         return None
 
     @staticmethod
-    def find_nodes_by_class(node_tree, type_class):
+    def find_nodes_by_class( node_tree: ShaderNodeTree, type_class ) -> list[Node]:
         """Return an array with all nodes of the given type class in the node tree."""
         _LOG.enter()
-        nodes = []
+        nodes: list[Node] = []
         for node in node_tree.nodes:
-            if isinstance(node, type_class):
-                nodes.append(node)
+            if isinstance( node, type_class ):
+                nodes.append( node )
         return nodes
 
     @staticmethod
-    def find_first_node_by_class(node_tree, type_class):
+    def find_first_node_by_class( node_tree: ShaderNodeTree, type_class ):
         """Find the first node with the given type class in the node tree."""
         _LOG.enter()
-        nodes = NodeService.find_nodes_by_class(node_tree, type_class)
-        if nodes is None or len(nodes) < 1:
+        nodes = NodeService.find_nodes_by_class( node_tree, type_class )
+        if nodes is None or len( nodes ) < 1:
             return None
         return nodes[0]
 
@@ -915,18 +932,21 @@ class NodeService:
         node_tree.links.new(from_socket, to_socket)
 
     @staticmethod
-    def get_image_file_path(image_texture_node):
-        """Return the normalized file path of an image referred to by an image texture node."""
+    def get_image_file_path( image_texture_node: ShaderNodeTexImage ) -> str:
+        """
+            Return the normalized file path of an image   
+            referred to by an image texture node.
+            """
         _LOG.enter()
         if image_texture_node.image:
             if image_texture_node.image.filepath or image_texture_node.image.filepath_raw:
                 if image_texture_node.image.filepath:
-                    path = bpy.path.abspath(image_texture_node.image.filepath)
-                    if os.path.isfile(path):
+                    path = bpy.path.abspath( image_texture_node.image.filepath )
+                    if os.path.isfile( path ):
                         return path
                     _LOG.warn("Is not a file:", path)
                 else:
-                    return bpy.path.abspath(image_texture_node.image.filepath_raw)
+                    return bpy.path.abspath( image_texture_node.image.filepath_raw )
             else:
                 _LOG.warn("Found image texture with an image property, but the image had an empty file path.")
         else:
@@ -934,39 +954,52 @@ class NodeService:
         return None
 
     @staticmethod
-    def create_node(node_tree, type_name, name=None, label=None, xpos=0, ypos=0):
-        """Create a new node with the given type."""
+    def create_node( node_tree: NodeTree, type_name: str, name=None, label=None, xpos=0, ypos=0 ):
+        """
+            Create a new node with the given type.  
+            """
         _LOG.enter()
-        new_node = node_tree.nodes.new(type_name)
+        new_node = node_tree.nodes.new( type_name )
         if not name is None:
             new_node.name = name
         if not label is None:
             new_node.label = label
-        new_node.location = (xpos, ypos)
+        new_node.location = ( xpos, ypos )
         return new_node
 
     @staticmethod
-    def create_node_from_dict(node_tree, node_info):
-        """Create a new node based on information in the provided dict."""
-        new_node = node_tree.nodes.new(node_info["type"])
-        NodeService.update_node_with_settings_from_dict(new_node, node_info)
+    def create_node_from_dict( node_tree: NodeTree, node_info ) -> Node:
+        """
+            Create a new node based on information in the provided dict.  
+            """
+        new_node = node_tree.nodes.new( node_info["type"] )
+        NodeService.update_node_with_settings_from_dict( new_node, node_info )
         return new_node
 
     @staticmethod
-    def create_principled_node(node_tree, name=None, label=None, xpos=0, ypos=0):
-        """Create a new principled node."""
+    def create_principled_node( node_tree: NodeTree, name=None, label=None, xpos=0, ypos=0 ) -> Node:
+        """
+            Create a new principled node.  
+            Type : "ShaderNodeBsdfPrincipled"
+            """
         _LOG.enter()
-        return NodeService.create_node(node_tree, "ShaderNodeBsdfPrincipled", name=name, label=label, xpos=xpos, ypos=ypos)
+        return NodeService.create_node( node_tree, "ShaderNodeBsdfPrincipled", name=name, label=label, xpos=xpos, ypos=ypos )
 
     @staticmethod
-    def create_bump_node(node_tree, name=None, label=None, xpos=0, ypos=0):
-        """Create a new bump node."""
+    def create_bump_node( node_tree: NodeTree, name=None, label=None, xpos=0, ypos=0 ) -> Node:
+        """
+            Create a new bump node.
+            Type : "ShaderNodeBump"
+            """
         _LOG.enter()
-        return NodeService.create_node(node_tree, "ShaderNodeBump", name=name, label=label, xpos=xpos, ypos=ypos)
+        return NodeService.create_node( node_tree, "ShaderNodeBump", name=name, label=label, xpos=xpos, ypos=ypos )
 
     @staticmethod
-    def create_normal_map_node(node_tree, name=None, label=None, xpos=0, ypos=0):
-        """Create a new normal map node."""
+    def create_normal_map_node( node_tree: NodeTree, name=None, label=None, xpos=0, ypos=0 ) -> Node:
+        """
+            Create a new normal map node.  
+            Type : "ShaderNodeNormalMap"  
+            """
         _LOG.enter()
         return NodeService.create_node(node_tree, "ShaderNodeNormalMap", name=name, label=label, xpos=xpos, ypos=ypos)
 
@@ -995,17 +1028,22 @@ class NodeService:
         return NodeService.create_node(node_tree, "ShaderNodeAttribute", name=name, label=label, xpos=xpos, ypos=ypos)
 
     @staticmethod
-    def create_image_texture_node(node_tree, name=None, label=None, xpos=0, ypos=0, image_path_absolute=None, colorspace="sRGB"):
-        """Create a new image texture node."""
+    def create_image_texture_node( node_tree: NodeTree, name=None, label=None, xpos=0, ypos=0, 
+                                   image_path_absolute=None, 
+                                   colorspace="sRGB" ) -> Node:
+        """
+            Create a new image texture node.  
+            Type : "ShaderNodeTexImage"  
+            """
         _LOG.enter()
-        new_texture_node = NodeService.create_node(node_tree, "ShaderNodeTexImage", name=name, label=label, xpos=xpos, ypos=ypos)
+        new_texture_node = NodeService.create_node( node_tree, "ShaderNodeTexImage", name=name, label=label, xpos=xpos, ypos=ypos )
         if image_path_absolute:
-            image_file_name = os.path.basename(image_path_absolute)
+            image_file_name = os.path.basename( image_path_absolute )
             if image_file_name in bpy.data.images:
-                _LOG.debug("image was previously loaded", image_path_absolute)
-                image = bpy.data.images[image_file_name]
+                _LOG.debug( "image was previously loaded", image_path_absolute )
+                image = bpy.data.images[ image_file_name ]
             else:
-                image = bpy.data.images.load(image_path_absolute)
+                image = bpy.data.images.load( image_path_absolute )
             image.colorspace_settings.name = colorspace
             new_texture_node.image = image
         return new_texture_node

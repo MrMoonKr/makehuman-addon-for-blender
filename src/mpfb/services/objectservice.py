@@ -39,6 +39,7 @@ class ObjectService:
         """
 
     def __init__( self ):
+        """You should not instance ObjectService. Use its static methods instead."""
         raise RuntimeError( "You should not instance ObjectService. Use its static methods instead." )
 
     @staticmethod

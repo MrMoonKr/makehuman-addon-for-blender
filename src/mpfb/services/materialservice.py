@@ -1,6 +1,7 @@
 """Various functions for working with materials"""
 
 import os, bpy, json, gzip
+from bpy.types import Object, Material, ShaderNodeTree
 
 from .locationservice import LocationService
 from .logservice import LogService
@@ -14,69 +15,76 @@ _LOG = LogService.get_logger("services.materialservice")
 
 
 class MaterialService():
-    """The MaterialService class is a utility class designed to handle various operations related to MPFB materials in Blender.
-    It provides a collection of static methods that facilitate the creation, modification, and management of materials assigned
-    to Blender objects. The class is not meant to be instantiated; instead, its static methods should be used directly.
+    """
+        The MaterialService class is a utility class designed to handle various operations related to MPFB materials in Blender.
+        It provides a collection of static methods that facilitate the creation, modification, and management of materials assigned
+        to Blender objects. The class is not meant to be instantiated; instead, its static methods should be used directly.
 
-    Its key responsibilities are:
+        Its key responsibilities are:
 
-    - Creating, adding and removing materials
-    - Identifying material
-    - Checking the validity of materials
-    - I/O operations for loading and saving materials
+        - Creating, adding and removing materials
+        - Identifying material
+        - Checking the validity of materials
+        - I/O operations for loading and saving materials
 
-    Overall, the MaterialService class provides a comprehensive set of tools for managing MPFB materials in Blender,
-    making it easier to work with complex material setups and ensuring consistency across different objects and scenes."""
+        Overall, the MaterialService class provides a comprehensive set of tools for managing MPFB materials in Blender,
+        making it easier to work with complex material setups and ensuring consistency across different objects and scenes.
+        """
 
-    def __init__(self):
+    def __init__( self ):
         """You should not instance MaterialService. Use its static methods instead."""
-        raise RuntimeError("You should not instance MaterialService. Use its static methods instead.")
+        raise RuntimeError( "You should not instance MaterialService. Use its static methods instead." )
 
     @staticmethod
-    def delete_all_materials(blender_object, also_destroy_groups=False):
-        """Deletes all materials from the given blender object.
-
-        Args:
-            blender_object (bpy.types.Object): The blender object to delete materials from.
-            also_destroy_groups (bool): Whether to also destroy the groups that were created for the materials.
+    def delete_all_materials( blender_object: Object, also_destroy_groups: bool=False ):
         """
+            Deletes all materials from the given blender object.  
+
+            Args:
+                blender_object (bpy.types.Object): The blender object to delete materials from.
+                also_destroy_groups (bool): Whether to also destroy the groups that were created for the materials.
+            """
         _LOG.dump("Current materials", (blender_object.data.materials, len(blender_object.data.materials)))
         for material in blender_object.data.materials:
             material.name = material.name + ".unused"
             if also_destroy_groups:
-                NodeService.clear_node_tree(material.node_tree, also_destroy_groups=True)
-        while len(blender_object.data.materials) > 0:
+                NodeService.clear_node_tree( material.node_tree, also_destroy_groups=True )
+        while len( blender_object.data.materials ) > 0:
             blender_object.data.materials.pop()
         for block in bpy.data.materials:
             if block.users == 0:
-                bpy.data.materials.remove(block)
+                bpy.data.materials.remove( block )
 
     @staticmethod
-    def has_materials(blender_object):
-        """Check if object has any materials at all assigned"""
+    def has_materials( blender_object: Object ):
+        """
+            Check if object has any materials at all assigned  
+            """
         if not blender_object.material_slots:
             return False
-        return len(blender_object.material_slots) > 0
+        return len( blender_object.material_slots ) > 0
 
     @staticmethod
-    def get_material(blender_object, slot=0):
-        """Return the material in the object's given material slot"""
-        if not blender_object.material_slots or len(blender_object.material_slots) < 1:
+    def get_material( blender_object: Object, slot=0 ):
+        """
+            Return the material in the object's given material slot
+            """
+        if not blender_object.material_slots or len( blender_object.material_slots ) < 1:
             return None
         return blender_object.material_slots[slot].material
 
     @staticmethod
-    def identify_material(material):
+    def identify_material( material: Material ):
         """Try to figure out which kind of material we have"""
         if not material:
             return "empty"
         nodes = material.node_tree.nodes
 
-        if len(nodes) == 0:
+        if len( nodes ) == 0:
             return "empty"
 
         for node in nodes:
-            node_info = NodeService.get_node_info(node)
+            node_info = NodeService.get_node_info( node )
             if node_info and node_info["type"] == "ShaderNodeGroup" and node_info["values"]:
                 # Material is potentially a procedural type material
                 _LOG.debug("node_info", node_info)
@@ -89,24 +97,24 @@ class MaterialService():
 
         # Since we're not enhanced skin nor procedural eyes, next guess is makeskin. The
         # diffuseIntensity is there in most cases.
-        if NodeService.find_node_by_name(material.node_tree, "diffuseIntensity"):
+        if NodeService.find_node_by_name( material.node_tree, "diffuseIntensity" ):
             return "makeskin"
 
         # The final guess is GameEngine.
         # This might give a false positive if someone added a material with a principled node
         # to a MH object
-        if NodeService.find_node_by_name(material.node_tree, "Principled BSDF"):
+        if NodeService.find_node_by_name( material.node_tree, "Principled BSDF" ):
             return "gameengine"
 
         return "unknown"
 
     @staticmethod
-    def _set_normalmap_in_nodetree(node_tree, filename):
+    def _set_normalmap_in_nodetree( node_tree: ShaderNodeTree, filename: str ):
         _LOG.debug("Will set normalmap", filename)
 
         links = node_tree.links
 
-        normalmap = NodeService.find_first_node_by_type_name(node_tree, "ShaderNodeNormalMap")
+        normalmap = NodeService.find_first_node_by_type_name( node_tree, "ShaderNodeNormalMap" )
         _LOG.debug("Normalmap in initial sweep", normalmap)
 
         image_node = None
